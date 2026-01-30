@@ -21,6 +21,7 @@
         <div class="progress-container">
             <div class="progress-info">
                 <span>GN-fit Competency Test</span>
+                <span id="timer-display" style="font-weight: bold; color: #ff6b6b;">소요 시간 00:00</span>
                 <span id="progress-text">0 / 60</span>
             </div>
             <div class="progress-bar-bg">
@@ -31,10 +32,14 @@
 
     <!-- Main Content -->
     <div class="container test-container">
-        <!-- Section Title Hidden per request -->
-        <!-- <div class="centering-wrapper">
-            <div id="section-badge" class="section-title">SECTION 1</div>
-        </div> -->
+
+        <!-- Guide Text -->
+        <div class="guide-text-container" style="text-align: center; margin-bottom: 20px; padding: 0 15px;">
+            <h2 style="font-size: 1.3rem; margin-bottom: 8px; color: #333; word-break: keep-all;">본인을 더 잘 표현한다고 생각하는 문장을
+                선택해 주세요.</h2>
+            <p style="font-size: 0.95rem; color: #666; margin: 0; word-break: keep-all;">정답이 없으므로 너무 오래 고민하지 말고 평소 본인의
+                모습과 더 가까운 것을 선택하세요.</p>
+        </div>
 
         <form id="test-form">
             <div id="question-list">

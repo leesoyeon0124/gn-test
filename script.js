@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameInput = document.getElementById('name');
     const birthdateInput = document.getElementById('birthdate');
     const phoneInput = document.getElementById('phone');
+    const agreeCheckbox = document.getElementById('agree'); // Added checkbox
     const submitButton = document.querySelector('.btn-primary');
 
     // 초기 상태: 버튼 비활성화
@@ -14,13 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameValue = nameInput.value.trim();
         const birthdateValue = birthdateInput.value.trim();
         const phoneValue = phoneInput.value.trim();
+        const isAgreed = agreeCheckbox.checked; // Check explicit agreement
 
         // 유효성 검사 규칙
         const isNameValid = nameValue.length >= 2;
         const isBirthdateValid = /^\d{6}$/.test(birthdateValue); // 숫자 6자리 정규식
         const isPhoneValid = /^\d{10,11}$/.test(phoneValue); // 숫자 10~11자리
 
-        if (isNameValid && isBirthdateValid && isPhoneValid) {
+        if (isNameValid && isBirthdateValid && isPhoneValid && isAgreed) {
             submitButton.disabled = false;
             submitButton.style.opacity = '1';
             submitButton.style.cursor = 'pointer';
@@ -46,6 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
         checkInputs();
     });
 
+    // 체크박스 변경 시에도 검사
+    agreeCheckbox.addEventListener('change', checkInputs);
+
     // 폼 제출 시 (검사 시작하기 버튼 클릭)
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault(); // 기본 제출 동작 막기
@@ -58,10 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('gnFit_answers');
         localStorage.removeItem('gnFit_section');
 
-        // 저장
+        // 저장 (동의 여부 포함)
         localStorage.setItem('applicantName', nameValue);
         localStorage.setItem('applicantBirthdate', birthdateValue);
         localStorage.setItem('applicantPhone', phoneValue);
+        localStorage.setItem('applicantAgree', 'Y'); // Explicitly save agreement
 
         // 페이지 이동 (알림 없음)
         window.location.href = 'instruction.html';

@@ -42,6 +42,16 @@
                         maxlength="11" pattern="\d{10,11}" required>
                 </div>
 
+                <div class="input-group consent-group"
+                    style="margin-top: 15px; display: flex; align-items: start; gap: 8px;">
+                    <input type="checkbox" id="agree" name="agree"
+                        style="width: 20px; height: 20px; margin-top: 2px; cursor: pointer;">
+                    <label for="agree" style="font-size: 14px; color: #555; line-height: 1.4; cursor: pointer;">
+                        이름, 연락처, 생년월일 수집에 동의합니다.<br>
+                        <span style="font-size: 12px; color: #888;">수집된 정보는 검사 결과 확인용으로만 사용되며 종료 후 파기됩니다.</span>
+                    </label>
+                </div>
+
                 <div class="button-group">
                     <button type="submit" class="btn-primary">검사 시작하기</button>
                 </div>
