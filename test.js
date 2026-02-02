@@ -147,7 +147,6 @@ function renderSection(sectionIdx) {
         <div class="question-item">
             <div class="question-header">
                 <span class="q-number">Q${q.id}</span>
-                <span class="q-text">${q.category}</span>
             </div>
             <div class="options-grid">
                 <div class="option-card ${saved === 'A' ? 'selected' : ''}" 
