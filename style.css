@@ -126,6 +126,83 @@ body {
     box-shadow: 0 0 0 3px rgba(137, 162, 48, 0.2);
 }
 
+/* Navigation Area */
+.nav-area {
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+    /* Previous Left, Next Right */
+    align-items: center;
+    padding-bottom: 60px;
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Common Button Styles for Uniformity */
+.btn-prev,
+.btn-next,
+.btn-submit {
+    height: 52px;
+    /* Fixed height for alignment */
+    padding: 0 40px;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 140px;
+    /* Consistent width */
+    letter-spacing: -0.01em;
+}
+
+/* Previous Button - Soft & Harmonious */
+.btn-prev {
+    background-color: #f5f5f7;
+    color: #666;
+    border: 1px solid #e1e1e6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.btn-prev:hover {
+    background-color: #eaeaea;
+    color: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Next / Submit Button - Primary & Vibrant */
+.btn-next,
+.btn-submit {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    /* Slightly colored shadow via opacity */
+}
+
+.btn-next:hover,
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    filter: brightness(1.05);
+}
+
+.btn-next:disabled,
+.btn-submit:disabled {
+    background-color: #d1d1d6;
+    color: #fff;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    filter: none;
+}
+
+
 /* Button Group */
 .button-group {
     margin-top: 16px;

@@ -1,10 +1,25 @@
+// [SECURITY] Google Apps Script URL for duplicate check
+// NOTE: Make sure this matches the URL in test.js
+const GOOGLE_SCRIPT_URL_CHECK = "https://script.google.com/macros/s/AKfycby1RrZtd9rzLM6w0c4DzGhY_OOO_RkqHRW7-fPDUHL63uZMri_BtsXyYdjNY-wSnvVQ/exec";
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.querySelector('.login-form');
     const nameInput = document.getElementById('name');
     const birthdateInput = document.getElementById('birthdate');
     const phoneInput = document.getElementById('phone');
-    const agreeCheckbox = document.getElementById('agree'); // Added checkbox
+    const agreeCheckbox = document.getElementById('agree');
     const submitButton = document.querySelector('.btn-primary');
+    const inputs = [nameInput, birthdateInput, phoneInput, agreeCheckbox, submitButton];
+
+    // 1. [Device Block] Check if already completed on this device
+    if (localStorage.getItem('gnFit_complete') === 'true') {
+        alert("이미 응시 완료된 기기입니다. 재접속할 수 없습니다.");
+        inputs.forEach(el => el.disabled = true);
+        submitButton.textContent = "응시 완료됨";
+        submitButton.style.backgroundColor = "#ccc";
+        submitButton.style.cursor = "not-allowed";
+        return; // Stop initialization
+    }
 
     // 초기 상태: 버튼 비활성화
     submitButton.disabled = true;
@@ -12,15 +27,16 @@ document.addEventListener('DOMContentLoaded', () => {
     submitButton.style.cursor = 'not-allowed';
 
     function checkInputs() {
+        if (localStorage.getItem('gnFit_complete') === 'true') return;
+
         const nameValue = nameInput.value.trim();
         const birthdateValue = birthdateInput.value.trim();
         const phoneValue = phoneInput.value.trim();
-        const isAgreed = agreeCheckbox.checked; // Check explicit agreement
+        const isAgreed = agreeCheckbox.checked;
 
-        // 유효성 검사 규칙
         const isNameValid = nameValue.length >= 2;
-        const isBirthdateValid = /^\d{6}$/.test(birthdateValue); // 숫자 6자리 정규식
-        const isPhoneValid = /^\d{10,11}$/.test(phoneValue); // 숫자 10~11자리
+        const isBirthdateValid = /^\d{6}$/.test(birthdateValue);
+        const isPhoneValid = /^\d{10,11}$/.test(phoneValue);
 
         if (isNameValid && isBirthdateValid && isPhoneValid && isAgreed) {
             submitButton.disabled = false;
@@ -48,28 +64,54 @@ document.addEventListener('DOMContentLoaded', () => {
         checkInputs();
     });
 
-    // 체크박스 변경 시에도 검사
     agreeCheckbox.addEventListener('change', checkInputs);
 
-    // 폼 제출 시 (검사 시작하기 버튼 클릭)
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // 기본 제출 동작 막기
+    // 2. [Real-time Check & Login]
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
         const nameValue = nameInput.value.trim();
         const birthdateValue = birthdateInput.value.trim();
         const phoneValue = phoneInput.value.trim();
 
-        // 데이터 초기화 (새로운 응시자)
+        // UI Feedback during check
+        const originalText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = "확인 중...";
+
+        try {
+            // Check for duplicates in Google Sheets
+            if (GOOGLE_SCRIPT_URL_CHECK && GOOGLE_SCRIPT_URL_CHECK.startsWith("https")) {
+                const checkUrl = `${GOOGLE_SCRIPT_URL_CHECK}?phone=${encodeURIComponent(phoneValue)}`;
+
+                // Note: Apps Script must be deployed as "Anyone" for this to work without CORS errors on simple GET requests returning JSON.
+                // If CORS issues persist, we might catch the error and proceed, but strict blocking requires CORS support.
+                const response = await fetch(checkUrl);
+                const resultData = await response.json();
+
+                if (resultData.result === 'already_exists') {
+                    alert("이미 응시 완료된 연락처입니다. 재응시가 필요한 경우 담당자에게 문의하세요.");
+                    submitButton.textContent = originalText;
+                    checkInputs(); // Re-enable if valid inputs remain
+                    return; // Stop login
+                }
+            }
+        } catch (error) {
+            console.warn("Duplicate check failed (network/CORS), proceeding locally:", error);
+            // Optionally: alert("서버 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."); return;
+            // For now, allow proceeding if check fails to avoid blocking valid users during outages.
+        }
+
+        // Proceed to Login
+        // Clear previous session data except device flag
         localStorage.removeItem('gnFit_answers');
         localStorage.removeItem('gnFit_section');
 
-        // 저장 (동의 여부 포함)
         localStorage.setItem('applicantName', nameValue);
         localStorage.setItem('applicantBirthdate', birthdateValue);
         localStorage.setItem('applicantPhone', phoneValue);
-        localStorage.setItem('applicantAgree', 'Y'); // Explicitly save agreement
+        localStorage.setItem('applicantAgree', 'Y');
 
-        // 페이지 이동 (알림 없음)
         window.location.href = 'instruction.html';
     });
 });
