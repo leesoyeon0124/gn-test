@@ -1,9 +1,17 @@
-// test.js - Final Version with 60 Questions
+// test.js - Final Design Restoration (Pagination & Theming)
 
 // [CONFIG] Google Apps Script URL
-// 사용자가 언급한 PPAV 주소가 없는 경우 기존 주소를 사용하되, 확인이 필요합니다.
-// 일단 script.js와 동일한 주소를 사용합니다. 만약 PPAV 주소가 있다면 교체해주세요.
 const scriptURL = "https://script.google.com/macros/s/AKfycbxzvJmeRmGC_oWgqTaUEv9SaXAM765_OFCGU35t53fW0CZJo4aAuZ8dEsOG8sj3fxeD/exec";
+
+// [THEME CONFIG] Section Themes
+const SECTIONS = [
+    { start: 0, end: 9, themeVar: '--section-1-color', name: 'PART 1' },
+    { start: 10, end: 19, themeVar: '--section-2-color', name: 'PART 2' },
+    { start: 20, end: 29, themeVar: '--section-3-color', name: 'PART 3' },
+    { start: 30, end: 39, themeVar: '--section-1-color', name: 'PART 4' },
+    { start: 40, end: 49, themeVar: '--section-2-color', name: 'PART 5' },
+    { start: 50, end: 59, themeVar: '--section-3-color', name: 'PART 6' }
+];
 
 // [DATA] 60 Questions
 const allQuestions = [
@@ -75,15 +83,23 @@ const allQuestions = [
 ];
 
 // State Variables
-let currentIdx = 0;
+let currentSection = 0;
 let userAnswers = {};
 let timerInterval = null;
 
 // [INIT] Page Load
-window.onload = function () {
-    renderQuestion();
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. 타이머 시작
     startTimer();
-};
+
+    // 2. 버튼 이벤트 연결
+    document.getElementById('prev-btn').addEventListener('click', goPrevSection);
+    document.getElementById('next-btn').addEventListener('click', goNextSection);
+    document.getElementById('submit-btn').addEventListener('click', submitFinal);
+
+    // 3. 첫 섹션 렌더링
+    renderSection(0);
+});
 
 // [UI] Timer Logic
 function startTimer() {
@@ -107,83 +123,171 @@ function startTimer() {
     }, 1000);
 }
 
-// [UI] Render Logic
-function renderQuestion() {
+// [RENDER] Render Section (10 per page)
+function renderSection(sectionIdx) {
     const container = document.getElementById('question-list');
-    const q = allQuestions[currentIdx];
-    const saved = userAnswers[q.id]; // 'A' or 'B'
+    const section = SECTIONS[sectionIdx];
 
-    // HTML Structure
-    container.innerHTML = `
-        <div class="question-card" style="animation: fadeIn 0.3s ease;">
-            <div class="split-layout">
-                <div class="option-box ${saved === 'A' ? 'selected' : ''}" onclick="selectOption('A')">
-                    <span class="option-label">A</span>
-                    <p class="option-text">${q.optionA}</p>
-                    <div class="check-icon"></div>
-                </div>
-                
-                <div class="vs-badge">VS</div>
+    // 1. Update Theme
+    document.documentElement.style.setProperty('--theme-color', `var(${section.themeVar})`);
 
-                <div class="option-box ${saved === 'B' ? 'selected' : ''}" onclick="selectOption('B')">
-                    <span class="option-label">B</span>
-                    <p class="option-text">${q.optionB}</p>
-                    <div class="check-icon"></div>
-                </div>
+    // 2. Update Progress Bar Info
+    document.getElementById('progress-text').textContent = `PART ${sectionIdx + 1} / 6`;
+    const progressPercent = ((sectionIdx + 1) / 6) * 100;
+    document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+    // 3. Render Questions
+    let html = '';
+
+    for (let i = section.start; i <= section.end; i++) {
+        const q = allQuestions[i];
+        const saved = userAnswers[q.id]; // 'A' or 'B'
+
+        html += `
+        <div class="question-item">
+            <div class="question-header">
+                <span class="q-number">Q${q.id}</span>
+                <span class="q-text">${q.category}</span>
             </div>
-            
-            <div class="nav-control">
-                ${currentIdx > 0 ? `<button type="button" class="btn-prev" onclick="goPrev()">이전 문항</button>` : '<div></div>'}
-                <div class="page-indicator">${currentIdx + 1} / 60</div>
+            <div class="options-grid">
+                <div class="option-card ${saved === 'A' ? 'selected' : ''}" 
+                     onclick="selectOption(${q.id}, 'A')">
+                    <input type="radio" name="q${q.id}" value="A" class="option-input" ${saved === 'A' ? 'checked' : ''}>
+                    <span class="option-text">${q.optionA}</span>
+                </div>
+                <div class="option-card ${saved === 'B' ? 'selected' : ''}" 
+                     onclick="selectOption(${q.id}, 'B')">
+                    <input type="radio" name="q${q.id}" value="B" class="option-input" ${saved === 'B' ? 'checked' : ''}>
+                    <span class="option-text">${q.optionB}</span>
+                </div>
             </div>
         </div>
-    `;
+        `;
+    }
 
-    // Update Header Progress
-    updateProgressHeader();
+    container.innerHTML = html;
+
+    // 4. Update Buttons
+    updateNavButtons(sectionIdx);
+
+    // 5. Scroll to Top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function updateProgressHeader() {
-    const textEl = document.getElementById('progress-text');
-    const barEl = document.getElementById('progress-bar');
+// [ACTION] Handle Option Selection
+window.selectOption = function (qId, val) {
+    userAnswers[qId] = val;
 
-    if (textEl) textEl.textContent = `${currentIdx + 1} / 60`;
-    if (barEl) barEl.style.width = `${((currentIdx + 1) / 60) * 100}%`;
-}
+    // UI Update (find the clicked card and update class)
+    // Note: Since rendered via innerHTML, we just re-render or toggle classes?
+    // Using simple class toggle for better performance than full re-render
+    const qIndex = qId - 1; // ID is 1-based index
+    // Find the specific question item in DOM
+    // Since we don't have unique IDs on items, we find by q-number text or better yet, re-render is safe enough for 10 items?
+    // Let's do a smart toggle.
 
-// [ACTION] User Selection
-window.selectOption = function (val) {
-    const q = allQuestions[currentIdx];
-    userAnswers[q.id] = val;
-
-    // UI Feedback (Highlight immediately before moving)
-    renderQuestion();
-
-    // Auto-advance with slight delay for visual confirmation
-    setTimeout(() => {
-        if (currentIdx < allQuestions.length - 1) {
-            currentIdx++;
-            renderQuestion();
+    // Find the wrapper
+    // Because we have multiple q-ids, we need to find the specific input name="q${qId}"
+    const inputs = document.getElementsByName(`q${qId}`);
+    inputs.forEach(input => {
+        const card = input.closest('.option-card');
+        if (input.value === val) {
+            card.classList.add('selected');
+            input.checked = true;
         } else {
-            // Last Question
-            if (confirm("모든 문항에 답변하셨습니다. 결과를 제출하시겠습니까?")) {
-                submitFinal();
-            }
+            card.classList.remove('selected');
         }
-    }, 200); // 200ms delay
+    });
+
+    // Check if current section is complete
+    checkSectionComplete();
 }
 
-window.goPrev = function () {
-    if (currentIdx > 0) {
-        currentIdx--;
-        renderQuestion();
+function checkSectionComplete() {
+    // Optional: Enable Next button if all done?
+    // For now, allow click and validate on click
+}
+
+function updateNavButtons(sectionIdx) {
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Prev Button
+    if (sectionIdx === 0) {
+        prevBtn.style.display = 'none';
+    } else {
+        prevBtn.style.display = 'block';
+    }
+
+    // Next / Submit Buttons
+    if (sectionIdx === SECTIONS.length - 1) {
+        // Last Page
+        nextBtn.style.display = 'none';
+        submitBtn.style.display = 'block';
+    } else {
+        nextBtn.style.display = 'block';
+        submitBtn.style.display = 'none';
+    }
+
+    // Reset disabled state (re-enabled always, check on click)
+    nextBtn.disabled = false;
+    submitBtn.disabled = false;
+}
+
+// [NAV] Check Completion
+function validateSection(sectionIdx) {
+    const section = SECTIONS[sectionIdx];
+    const missing = [];
+
+    for (let i = section.start; i <= section.end; i++) {
+        const qId = allQuestions[i].id;
+        if (!userAnswers[qId]) {
+            missing.push(qId);
+        }
+    }
+
+    if (missing.length > 0) {
+        alert(`아직 답변하지 않은 문항이 있습니다.\n(Q${missing[0]}번 등)`);
+
+        // Scroll to first missing
+        // TODO: Implement scroll to specific item if needed
+        return false;
+    }
+    return true;
+}
+
+function goPrevSection() {
+    if (currentSection > 0) {
+        currentSection--;
+        renderSection(currentSection);
+    }
+}
+
+function goNextSection() {
+    if (validateSection(currentSection)) {
+        if (currentSection < SECTIONS.length - 1) {
+            currentSection++;
+            renderSection(currentSection);
+        }
     }
 }
 
 // [SUBMIT] Final Submission
 async function submitFinal() {
+    if (!validateSection(currentSection)) return;
+
+    if (!confirm("모든 검사를 마쳤습니다. 제출하시겠습니까?")) return;
+
     // Stop Timer
     clearInterval(timerInterval);
+
+    // UI Loading
+    document.getElementById('submit-btn').textContent = "전송 중...";
+    document.getElementById('submit-btn').disabled = true;
+
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.style.display = 'flex';
 
     // Prepare Data
     const name = localStorage.getItem('applicantName');
@@ -191,8 +295,12 @@ async function submitFinal() {
     const phone = localStorage.getItem('applicantPhone');
     const agree = localStorage.getItem('applicantAgree');
 
-    const startTime = parseInt(localStorage.getItem('gnFit_startTime') || Date.now());
-    const totalTime = Math.floor((Date.now() - startTime) / 1000);
+    // Timer Calc
+    const startTimeStr = localStorage.getItem('gnFit_startTime');
+    let totalTime = 0;
+    if (startTimeStr) {
+        totalTime = Math.floor((Date.now() - parseInt(startTimeStr)) / 1000);
+    }
 
     const record = {
         name,
@@ -204,17 +312,15 @@ async function submitFinal() {
         timestamp: new Date().toLocaleString()
     };
 
-    // 1. Save to Local Backup (Admin)
-    const db = JSON.parse(localStorage.getItem('gnFit_db') || '[]');
-    db.push(record);
-    localStorage.setItem('gnFit_db', JSON.stringify(db));
-
-    // Show Loading Overlay
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.style.display = 'flex';
-
+    // 1. Local Backup
     try {
-        // 2. Send to Google Sheets
+        const db = JSON.parse(localStorage.getItem('gnFit_db') || '[]');
+        db.push(record);
+        localStorage.setItem('gnFit_db', JSON.stringify(db));
+    } catch (e) { console.error('Backup failed', e); }
+
+    // 2. G-Sheet Submit
+    try {
         await fetch(scriptURL, {
             method: 'POST',
             mode: 'no-cors',
@@ -222,24 +328,25 @@ async function submitFinal() {
             body: JSON.stringify(record)
         });
 
-        // 3. Cleanup & Flagging
-        localStorage.setItem('survey_completed', 'true');
-
-        // Remove Session Data
-        localStorage.removeItem('applicantName');
-        localStorage.removeItem('applicantBirthdate');
-        localStorage.removeItem('applicantPhone');
-        localStorage.removeItem('applicantAgree');
-        localStorage.removeItem('gnFit_startTime');
-
-        // 4. Redirect
-        alert('검사가 안전하게 제출되었습니다. 수고하셨습니다!');
-        window.location.href = 'result.html';
+        // 3. Cleanup & Redirect
+        finalizeAndRedirect();
 
     } catch (error) {
         console.error("Submission Error:", error);
-        alert('전송 중 오류가 발생했으나, 데이터는 로컬에 안전하게 저장되었습니다.');
-        localStorage.setItem('survey_completed', 'true');
-        window.location.href = 'result.html';
+        alert('전송 중 오류가 발생했으나, 데이터는 안전하게 저장되었습니다.');
+        finalizeAndRedirect();
     }
+}
+
+function finalizeAndRedirect() {
+    localStorage.setItem('survey_completed', 'true');
+    // Clear Session
+    localStorage.removeItem('applicantName');
+    localStorage.removeItem('applicantBirthdate');
+    localStorage.removeItem('applicantPhone');
+    localStorage.removeItem('applicantAgree');
+    localStorage.removeItem('gnFit_startTime');
+
+    alert('제출 완료되었습니다. 수고하셨습니다!');
+    window.location.href = 'result.html';
 }
