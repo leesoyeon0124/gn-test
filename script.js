@@ -1,21 +1,33 @@
-// script.js - Simplified Login Logic
-document.getElementById('loginForm').addEventListener('submit', (e) => {
-    e.preventDefault();
+// script.js - 강제 통과 버전
+window.onload = function () {
+    const loginForm = document.getElementById('loginForm');
 
-    const name = document.getElementById('name').value;
-    const phone = document.getElementById('phone').value;
-    const birth = document.getElementById('birth').value;
-    const agree = document.getElementById('agree').checked;
+    if (loginForm) {
+        loginForm.onsubmit = function (e) {
+            e.preventDefault();
+            console.log("버튼 클릭됨!");
 
-    // 1. 초기화 (이전 기록 삭제)
-    localStorage.clear();
+            try {
+                // 입력값 가져오기
+                const name = document.getElementById('name').value;
+                const phone = document.getElementById('phone').value;
+                const birth = document.getElementById('birth').value;
 
-    // 2. 입력 정보 저장
-    localStorage.setItem('applicantName', name);
-    localStorage.setItem('applicantBirthdate', birth);
-    localStorage.setItem('applicantPhone', phone);
-    localStorage.setItem('applicantAgree', agree ? 'Y' : 'N');
+                // 데이터 저장
+                localStorage.clear();
+                localStorage.setItem('applicantName', name);
+                localStorage.setItem('applicantPhone', phone);
+                localStorage.setItem('applicantBirthdate', birth);
 
-    // 3. 안내 페이지로 이동
-    window.location.href = 'instruction.html';
-});
+                // 유의사항 페이지로 강제 이동
+                window.location.href = 'instruction.html';
+            } catch (error) {
+                console.error("오류 발생:", error);
+                // 오류가 나도 무조건 보냅니다.
+                window.location.href = 'instruction.html';
+            }
+        };
+    } else {
+        alert("시스템 설정 중입니다. 잠시 후 다시 시도해 주세요. (loginForm 못 찾음)");
+    }
+};
