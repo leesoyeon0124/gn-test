@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderQuestion() {
     const q = allQuestions[currentIdx];
     const container = document.getElementById('question-container');
-    
+
     // 이전에 선택한 답이 있는지 확인
     const saved = userAnswers[q.id];
 
@@ -97,7 +97,7 @@ function renderQuestion() {
 }
 
 // 5. 답변 선택 시
-window.selectOption = function(val) {
+window.selectOption = function (val) {
     const q = allQuestions[currentIdx];
     userAnswers[q.id] = val; // 답변 저장
 
@@ -106,14 +106,14 @@ window.selectOption = function(val) {
         renderQuestion();
         updateProgressBar();
     } else {
-        if(confirm("모든 문항에 답변하셨습니다. 제출하시겠습니까?")) {
+        if (confirm("모든 문항에 답변하셨습니다. 제출하시겠습니까?")) {
             submitFinal();
         }
     }
 }
 
 // 6. 이전으로
-window.goPrev = function() {
+window.goPrev = function () {
     if (currentIdx > 0) {
         currentIdx--;
         renderQuestion();
