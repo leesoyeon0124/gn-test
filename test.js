@@ -359,9 +359,16 @@ submitBtn.addEventListener('click', async () => {
         await new Promise(r => setTimeout(r, 1000));
     }
 
-    // 5. [SECURITY] Set Completion Flag
+    // 5. [SECURITY] Set Completion Flag & Cleanup
     localStorage.setItem('gnFit_complete', 'true');
 
-    // 6. Redirect
+    // Cleanup Session Data (Keep gnFit_db and gnFit_complete)
+    const keysToRemove = [
+        'applicantName', 'applicantBirthdate', 'applicantPhone', 'applicantAgree',
+        'gnFit_answers', 'gnFit_section', 'gnFit_startTime', 'gnFit_questionOrder'
+    ];
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    // 6. Redirect to Result Page (Prevent Back Navigation)
     window.location.replace('result.html');
 });

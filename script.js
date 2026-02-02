@@ -112,6 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('applicantPhone', phoneValue);
         localStorage.setItem('applicantAgree', 'Y');
 
+        // [New] Reset Timer on Login
+        localStorage.setItem('gnFit_startTime', Date.now().toString());
+
         window.location.href = 'instruction.html';
     });
 });
